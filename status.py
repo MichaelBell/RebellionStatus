@@ -66,7 +66,7 @@ class BackDisplay:
     elif conn_type == '3G':
         status_colour = yellow
     else:
-        status_colout = red
+        status_colour = red
     strength = self.rebellion_status.get_signal_strength()
 
     if strength > 0:
