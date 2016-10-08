@@ -25,8 +25,14 @@ class NetStatus:
     if self.last_snmp_time + 2 < time.time():
       self.last_snmp_time = time.time()
       print "Reading SNMP"
-      self.operator = snmp_get('.1.3.6.1.4.1.99999.2.5.0', hostname='192.168.1.1', community='private', version=2).value
-      dbm = snmp_get('.1.3.6.1.4.1.99999.2.4.0', hostname='192.168.1.1', community='private', version=2).value
+      try:
+        self.operator = snmp_get('.1.3.6.1.4.1.99999.2.5.0', hostname='192.168.1.1', community='private', version=2).value
+        dbm = snmp_get('.1.3.6.1.4.1.99999.2.4.0', hostname='192.168.1.1', community='private', version=2).value
+        self.conn_type = snmp_get('.1.3.6.1.4.1.99999.2.8.0', hostname='192.168.1.1', community='private', version=2).value
+      except easysnmp.exceptions.EasySNMPError:
+        self.operator = 'unknown'
+        self.conn_type = 'unknown'
+        self.signal_strength = -1
       try:
         dbm = int(dbm)
         if dbm > -52: self.signal_strength = 5
@@ -38,7 +44,6 @@ class NetStatus:
       except ValueError:
         self.signal_strength = -1
 
-      self.conn_type = snmp_get('.1.3.6.1.4.1.99999.2.8.0', hostname='192.168.1.1', community='private', version=2).value
       if self.conn_type in conn_type_map: self.conn_type = conn_type_map[self.conn_type]
 
   def get_operator(self):
@@ -57,12 +62,15 @@ class NetStatus:
     if self.last_data_time + 600 < time.time():
       print "Reading data"
       if self.get_operator() == 'EE':
-        r = requests.get('http://add-on.ee.co.uk/')
-        if r.status_code == 200:
-          self.last_data_time = time.time()
-          m = re.search('>([0-9.]+)GB', r.text)
-          self.data_remaining = float(m.group(1))
-        else:
+        try:
+          r = requests.get('http://add-on.ee.co.uk/')
+          if r.status_code == 200:
+            self.last_data_time = time.time()
+            m = re.search('>([0-9.]+)GB', r.text)
+            self.data_remaining = float(m.group(1))
+          else:
+            self.data_remaining = -1
+        except requests.exceptions.RequestException:
           self.data_remaining = -1
       else:
         self.last_data_time = time.time()
