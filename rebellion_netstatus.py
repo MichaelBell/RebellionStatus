@@ -3,7 +3,7 @@
 import time
 import re
 import requests
-from easysnmp import snmp_get
+import easysnmp
 
 conn_type_map = {
   'LTE': '4G',
@@ -26,9 +26,9 @@ class NetStatus:
       self.last_snmp_time = time.time()
       print "Reading SNMP"
       try:
-        self.operator = snmp_get('.1.3.6.1.4.1.99999.2.5.0', hostname='192.168.1.1', community='private', version=2).value
-        dbm = snmp_get('.1.3.6.1.4.1.99999.2.4.0', hostname='192.168.1.1', community='private', version=2).value
-        self.conn_type = snmp_get('.1.3.6.1.4.1.99999.2.8.0', hostname='192.168.1.1', community='private', version=2).value
+        self.operator = easysnmp.snmp_get('.1.3.6.1.4.1.99999.2.5.0', hostname='192.168.1.1', community='private', version=2).value
+        dbm = easysnmp.snmp_get('.1.3.6.1.4.1.99999.2.4.0', hostname='192.168.1.1', community='private', version=2).value
+        self.conn_type = easysnmp.snmp_get('.1.3.6.1.4.1.99999.2.8.0', hostname='192.168.1.1', community='private', version=2).value
       except easysnmp.exceptions.EasySNMPError:
         self.operator = 'unknown'
         self.conn_type = 'unknown'
@@ -66,8 +66,11 @@ class NetStatus:
           r = requests.get('http://add-on.ee.co.uk/')
           if r.status_code == 200:
             self.last_data_time = time.time()
-            m = re.search('>([0-9.]+)GB', r.text)
-            self.data_remaining = float(m.group(1))
+            m = re.search('>([0-9.]+)([GM])B', r.text)
+            if (m.group(2) == 'G'):
+              self.data_remaining = float(m.group(1))
+            else:
+              self.data_remaining = float(m.group(1))/1000.0
           else:
             self.data_remaining = -1
         except requests.exceptions.RequestException:

@@ -2,6 +2,7 @@
 
 import time
 import pygame
+import requests
 
 from rebellion_netstatus import NetStatus
 import rebellion_battery
@@ -26,6 +27,17 @@ class DisplayEnd(Exception):
 
   def __str__(self):
     return "%s (%s)" % (self.str, self.extra)
+
+def get_weather():
+  weather = {'Temp': 'unknown', 'Pres': 'unknown'}
+  try:
+    r = requests.get('http://bowpi:8080/status')
+    if r.status_code == 200:
+      weather['Temp'] = str(r.json()['Temp'])
+      weather['Pres'] = str(r.json()['Pres'])
+  except requests.exceptions.RequestException:
+    pass
+  return weather
 
 class BackDisplay:
   def __init__(self):
@@ -79,6 +91,11 @@ class BackDisplay:
         pygame.draw.rect(self.screen, status_colour, (430, 40, 40, 160))
     if strength > 4:
         pygame.draw.rect(self.screen, status_colour, (480, 0, 40, 200))
+
+    weather = get_weather()
+    status = "%s C" % weather['Temp']
+    msg = small_font.render(status, False, white)
+    self.screen.blit(msg, (65 - msg.get_rect().centerx, 250))
 
     self.screen.blit(self.lion, (20,10))
 
