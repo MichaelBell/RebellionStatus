@@ -19,6 +19,7 @@ white = (255,255,255)
 pygame.font.init()
 large_font = pygame.font.Font(pygame.font.get_default_font(), 75)
 small_font = pygame.font.Font(pygame.font.get_default_font(), 50)
+smaller_font = pygame.font.Font(pygame.font.get_default_font(), 35)
 
 class DisplayEnd(Exception):
   def __init__(self, str, extra=""):
@@ -33,8 +34,8 @@ def get_weather():
   try:
     r = requests.get('http://bowpi:8080/status')
     if r.status_code == 200:
-      weather['Temp'] = str(r.json()['Temp'])
-      weather['Pres'] = str(r.json()['Pres'])
+      weather['Temp'] = str(round(r.json()['Temp'],1))
+      weather['Pres'] = str(round(r.json()['Pres'],1))
   except requests.exceptions.RequestException:
     pass
   return weather
@@ -93,9 +94,12 @@ class BackDisplay:
         pygame.draw.rect(self.screen, status_colour, (480, 0, 40, 200))
 
     weather = get_weather()
-    status = "%s C" % weather['Temp']
+    status = "%sC" % weather['Temp']
     msg = small_font.render(status, False, white)
-    self.screen.blit(msg, (65 - msg.get_rect().centerx, 250))
+    self.screen.blit(msg, (4, 240))
+    status = "%smB" % weather['Pres']
+    msg = smaller_font.render(status, False, white)
+    self.screen.blit(msg, (4, 300))
 
     self.screen.blit(self.lion, (20,10))
 
