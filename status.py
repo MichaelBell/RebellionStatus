@@ -32,7 +32,7 @@ class DisplayEnd(Exception):
 def get_weather():
   weather = {'Temp': 'unknown', 'Pres': 'unknown'}
   try:
-    r = requests.get('http://bowpi:8080/status')
+    r = requests.get('http://zeropi:8080/status')
     if r.status_code == 200:
       weather['Temp'] = str(round(r.json()['Temp'],1))
       weather['Pres'] = str(round(r.json()['Pres'],1))

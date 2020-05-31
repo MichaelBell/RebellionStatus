@@ -26,22 +26,22 @@ class NetStatus:
       self.last_snmp_time = time.time()
       print "Reading SNMP"
       try:
-        self.operator = easysnmp.snmp_get('.1.3.6.1.4.1.99999.2.5.0', hostname='192.168.1.1', community='private', version=2).value
-        dbm = easysnmp.snmp_get('.1.3.6.1.4.1.99999.2.4.0', hostname='192.168.1.1', community='private', version=2).value
-        self.conn_type = easysnmp.snmp_get('.1.3.6.1.4.1.99999.2.8.0', hostname='192.168.1.1', community='private', version=2).value
+        self.operator = easysnmp.snmp_get('.1.3.6.1.4.1.48690.2.5.0', hostname='192.168.1.1', community='private', version=2).value
+        dbm = easysnmp.snmp_get('.1.3.6.1.4.1.48690.2.4.0', hostname='192.168.1.1', community='private', version=2).value
+        self.conn_type = easysnmp.snmp_get('.1.3.6.1.4.1.48690.2.8.0', hostname='192.168.1.1', community='private', version=2).value
+        try:
+          dbm = int(dbm)
+          if dbm > -52: self.signal_strength = 5
+          elif dbm > -67: self.signal_strength = 4
+          elif dbm > -82: self.signal_strength = 3
+          elif dbm > -97: self.signal_strength = 2
+          elif dbm > -112: self.signal_strength = 1
+          else: self.signal_strength = 0
+        except ValueError:
+          self.signal_strength = -1
       except easysnmp.exceptions.EasySNMPError:
         self.operator = 'unknown'
         self.conn_type = 'unknown'
-        self.signal_strength = -1
-      try:
-        dbm = int(dbm)
-        if dbm > -52: self.signal_strength = 5
-        elif dbm > -67: self.signal_strength = 4
-        elif dbm > -82: self.signal_strength = 3
-        elif dbm > -97: self.signal_strength = 2
-        elif dbm > -112: self.signal_strength = 1
-        else: self.signal_strength = 0
-      except ValueError:
         self.signal_strength = -1
 
       if self.conn_type in conn_type_map: self.conn_type = conn_type_map[self.conn_type]
@@ -66,7 +66,7 @@ class NetStatus:
           r = requests.get('http://add-on.ee.co.uk/')
           if r.status_code == 200:
             self.last_data_time = time.time()
-            m = re.search('>([0-9.]+)([GM])B', r.text)
+            m = re.search('([0-9.]+)([GM])B', r.text)
             if (m.group(2) == 'G'):
               self.data_remaining = float(m.group(1))
             else:
